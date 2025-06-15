@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClimaView - Weather Report</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #83a4d4, #b6fbff);
+      color: #333;
+      text-align: center;
+    }
+
+    header {
+      background-color: #1e3c72;
+      color: white;
+      padding: 20px 0;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    input {
+      width: 250px;
+    }
+
+    button {
+      background-color: #1e3c72;
+      color: white;
+      cursor: pointer;
+    }
+
+    #weather {
+      margin: 30px auto;
+      max-width: 500px;
+      background-color: #ffffffcc;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.2);
+    }
+
+    #weather img {
+      width: 80px;
+    }
+
+    footer {
+      background-color: #1e3c72;
+      color: white;
+      padding: 20px 0;
+      margin-top: 30px;
+    }
+
+    .footer-social img {
+      width: 25px;
+      margin: 0 10px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🌤️ ClimaView</h1>
+    <p>Your real-time weather buddy</p>
+  </header>
+
+  <section>
+    <input type="text" id="cityInput" placeholder="Enter city name">
+    <button onclick="getWeatherByCity()">Search</button>
+    <button onclick="getWeatherByLocation()">📍 My Location</button>
+  </section>
+
+  <div id="weather"></div>
+
+  <footer>
+    <p>Contact us at: support@climaview.com</p>
+    <div class="footer-social">
+      <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook">
+      <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter">
+      <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn">
+    </div>
+    <p>&copy; 2025 ClimaView</p>
+  </footer>
+
+  <script>
+    const apiKey = 'YOUR_API_KEY_HERE';
+
+    function getWeatherByCity() {
+      const city = document.getElementById('cityInput').value;
+      if (!city) return alert("Please enter a city name.");
+      fetchWeather(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`);
+    }
+
+    function getWeatherByLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          fetchWeather(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
+        }, () => alert("Location access denied."));
+      } else {
+        alert("Geolocation is not supported.");
+      }
+    }
+
+    function fetchWeather(url) {
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.cod !== 200) {
+            document.getElementById('weather').innerHTML = `<p>Error: ${data.message}</p>`;
+            return;
+          }
+
+          const weatherHTML = `
+            <h2>${data.name}, ${data.sys.country} 
+              <img src="https://flagcdn.com/24x18/${data.sys.country.toLowerCase()}.png" alt="${data.sys.country}">
+            </h2>
+            <img src="http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="">
+            <p><strong>${data.weather[0].main}</strong> - ${data.weather[0].description}</p>
+            <p>🌡️ Temp: ${data.main.temp}°C (Feels like ${data.main.feels_like}°C)</p>
+            <p>🔻 Min: ${data.main.temp_min}°C | 🔺 Max: ${data.main.temp_max}°C</p>
+            <p>💧 Humidity: ${data.main.humidity}%</p>
+            <p>🌬️ Wind Speed: ${data.wind.speed} m/s</p>
+            <p>🌅 Sunrise: ${formatTime(data.sys.sunrise)} | 🌇 Sunset: ${formatTime(data.sys.sunset)}</p>
+          `;
+          document.getElementById('weather').innerHTML = weatherHTML;
+        })
+        .catch(() => {
+          document.getElementById('weather').innerHTML = `<p>Could not fetch data.</p>`;
+        });
+    }
+
+    function formatTime(unixTime) {
+      const date = new Date(unixTime * 1000);
+      return date.toLocaleTimeString();
+    }
+  </script>
+
+</body>
+</html>
